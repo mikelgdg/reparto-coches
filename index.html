@@ -7,7 +7,7 @@
 <meta name="description" content="Calcula el mejor reparto de coches para el plan del grupo: quién recoge a quién, el orden de recogidas y cuánto tarda cada uno.">
 <link rel="preconnect" href="https://api.openrouteservice.org">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="css/style.css?v=6">
+<link rel="stylesheet" href="css/style.css?v=7">
 </head>
 <body>
 <header id="topbar">
@@ -89,6 +89,9 @@
           <button id="btnSaveKey">Guardar</button>
           <button id="btnClearKey" class="ghost" title="Borrar clave">✕</button>
         </div>
+        <p class="help">La clave del plan viene con la puerta: solo hay que entrar con la palabra de paso. Si algún día la clave se
+        renueva, pulsa esto y vuelve a escribir la misma palabra:</p>
+        <button id="btnRekey" class="ghost">🔒 Renovar la clave (re-entrar)</button>
       </details>
     </section>
 
@@ -126,7 +129,7 @@
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="js/solver.js?v=6"></script>
-<script src="js/app.js?v=6"></script>
+<script src="js/solver.js?v=7"></script>
+<script src="js/app.js?v=7"></script>
 </body>
 </html>

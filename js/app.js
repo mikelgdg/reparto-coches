@@ -531,6 +531,13 @@
     orsUIState();
     toast('Clave borrada: volvemos a la estimación');
   });
+  /* renovar la clave (cuando se rota): volver a pedir la palabra y re-instalar */
+  $('#btnRekey').addEventListener('click', function () {
+    try { localStorage.removeItem(UNLOCK_LS); localStorage.removeItem(ORS_LS); } catch (e) { /* noop */ }
+    orsUIState();
+    gateShow();
+    toast('Pide la palabra de paso de nuevo para instalar la clave renovada', 'ok', 6000);
+  });
 
   /* ================= matrices ================= */
   var matrixCache = {};
