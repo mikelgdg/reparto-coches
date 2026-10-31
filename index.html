@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RepartoCars — el reparto definitivo de coches</title>
+<meta name="description" content="Calcula el mejor reparto de coches para el plan del grupo: quién recoge a quién, el orden de recogidas y cuánto tarda cada uno.">
+<link rel="preconnect" href="https://api.openrouteservice.org">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="css/style.css?v=6">
+</head>
+<body>
+<header id="topbar">
+  <div class="brand"><span class="logo">🚗</span> <strong>RepartoCars</strong><span class="tagline">el reparto definitivo de coches para el plan</span></div>
+  <div class="top-actions">
+    <button id="btnShare" title="Copia un enlace con todo el reparto configurado">🔗 Copiar enlace</button>
+  </div>
+</header>
+
+<main id="layout">
+  <aside id="panel">
+
+    <section class="card" id="cardVenue">
+      <h2>🍽️ El punto de destino</h2>
+      <div id="venueInfo" class="empty">Aún no has marcado el sitio. Pulsa <em>«Marcar en el mapa»</em> y haz clic donde está.</div>
+      <div class="row">
+        <input id="venueName" type="text" placeholder="Nombre del sitio (opcional)" class="hidden">
+        <button id="btnVenueMark" class="ghost">📍 Marcar en el mapa</button>
+      </div>
+      <div class="search">
+        <input id="venueSearch" type="text" placeholder="Buscar dirección o zona…">
+        <div id="venueSearchResults" class="search-results hidden"></div>
+      </div>
+    </section>
+
+  <section class="card" id="cardPeople">
+      <h2>👥 Amigos <span id="peopleCount" class="badge"></span></h2>
+      <div id="peopleList"></div>
+      <div class="row">
+        <button id="btnAddPerson" class="primary">➕ Añadir amigo</button>
+      </div>
+      <div class="row small">
+        <button id="btnDemo" class="link">Cargar ejemplo (13 · Getxo)</button>
+        <button id="btnClear" class="link danger">Empezar de cero</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>⚙️ Ajustes del plan</h2>
+      <div class="field"><label for="inEvent">¿Qué es el plan? (cena, comida, cañas…)</label>
+        <input id="inEvent" type="text" placeholder="cena">
+      </div>
+      <div class="field"><label for="inMode">Objetivo del reparto</label>
+        <select id="inMode">
+          <option value="fair">Que nadie lo pase mal (reparto justo)</option>
+          <option value="sum">Máxima eficiencia total</option>
+          <option value="spread">Todos salimos de casa a la misma hora</option>
+        </select>
+        <p class="help hidden" id="helpMode"></p>
+      </div>
+      <div class="field two">
+        <div><label for="inArrive">Llegada al restaurante</label><input type="time" id="inArrive" value="20:45"></div>
+        <div id="wrapDepart" class="hidden"><label for="inDepartOut">Salida de casa (común)</label><input type="time" id="inDepartOut" value="20:00"></div>
+        <div><label for="inReturn">Salida del restaurante</label><input type="time" id="inReturn" value="23:30"></div>
+      </div>
+      <div class="field two">
+        <div><label for="inFuel">Gasolina (€/km)</label><input type="number" id="inFuel" min="0" max="5" step="0.01" value="0.15"></div>
+        <div class="check-field"><label><input type="checkbox" id="inKeepGroups"> misma gente por coche a la vuelta</label></div>
+      </div>
+      <div class="field two">
+        <div><label for="inMarginMode">Margen de seguridad</label>
+          <select id="inMarginMode">
+            <option value="auto">Automático (según duración del viaje)</option>
+            <option value="manual">Fijo, lo pongo yo</option>
+          </select>
+        </div>
+        <div><label for="inMargin">Minutos de margen (modo fijo)</label><input type="number" id="inMargin" min="0" max="120" step="1" value="10"></div>
+      </div>
+      <details id="orsDetails">
+        <summary>🔑 Tiempos de conducción <span id="orsBadge" class="badge ok">OSRM demo (tiempos reales)</span></summary>
+        <p class="help">Por defecto la app usa el <strong>servidor demo de OSRM</strong>: tiempos reales de calle,
+        sin registro (con la reticencia normal de un server público; si falla, calcula con estimación).
+        Para OpenRouteService (más preciso, con tu propia red): consigue una clave gratuita en
+        <a href="https://openrouteservice.org/dev/#/signup" target="_blank" rel="noopener">ORS Dev</a> — ojo: el
+        panel de cuentas está de baja temporal (octubre 2026, incidente PHP) — hecha una clave, pégala aquí y se
+        quedará solo en tu navegador.</p>
+        <div class="row">
+          <input id="orsKey" type="password" placeholder="ORS API key">
+          <button id="btnSaveKey">Guardar</button>
+          <button id="btnClearKey" class="ghost" title="Borrar clave">✕</button>
+        </div>
+      </details>
+    </section>
+
+  </aside>
+
+  <section id="right">
+    <div id="mapBox">
+      <div id="map"></div>
+      <div id="mapHint" class="hidden"><span id="mapHintText"></span><button id="mapHintCancel" class="ghost">Cancelar (Esc)</button></div>
+    </div>
+    <div id="actions">
+      <button id="btnCalc" class="primary big">🧮 Calcular reparto</button>
+      <button id="btnCopyText" class="hidden">📋 Copiar resumen (WhatsApp)</button>
+      <span id="aimText"></span>
+    </div>
+    <section id="results">
+      <h2>Resultados</h2>
+      <div id="resultsBody" class="muted">Configura la gente y pulsa <em>Calcular reparto</em>.</div>
+      <footer class="attribution">Mapa © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> · Tiempos: <a href="https://openrouteservice.org/" target="_blank" rel="noopener">OpenRouteService</a> / <a href="https://project-osrm.org/" target="_blank" rel="noopener">OSRM demo</a></footer>
+    </section>
+  </section>
+</main>
+
+<div id="toast" class="hidden"></div>
+
+<div id="gateOverlay" class="hidden" role="dialog" aria-modal="true" aria-label="Pantalla de entrada">
+  <div class="gate-card" id="gateCard">
+    <div class="gate-emoji">🚗</div>
+    <h2>RepartoCars</h2>
+    <p class="gate-sub">El plan es en privado.<br>Escribe la palabra de paso para entrar.</p>
+    <input id="gatePass" type="password" autocomplete="off" placeholder="palabra de paso" aria-label="Palabra de paso">
+    <button id="gateGo">Entrar</button>
+    <div id="gateErr" class="gate-err hidden"></div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/solver.js?v=6"></script>
+<script src="js/app.js?v=6"></script>
+</body>
+</html>
